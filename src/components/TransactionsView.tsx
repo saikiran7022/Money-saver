@@ -26,14 +26,14 @@ export default function TransactionsView({ filter }: { filter: PeriodFilter }) {
 
   return (
     <div className="card">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500">
           <span className="font-semibold text-slate-700">{rows.length}</span> transactions
         </p>
-        <div className="relative">
+        <div className="relative w-full sm:w-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
-            className="input w-64 pl-9"
+            className="input w-full pl-9"
             placeholder="Search description or category…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -41,7 +41,59 @@ export default function TransactionsView({ filter }: { filter: PeriodFilter }) {
         </div>
       </div>
 
-      <div className="overflow-auto rounded-xl border border-slate-200">
+      {/* Mobile: stacked cards (no sideways scrolling). */}
+      <ul className="space-y-2.5 md:hidden">
+        {rows.map((t) => (
+          <li
+            key={t.id}
+            className="rounded-xl border border-slate-200 p-3"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-medium text-slate-700">{t.description}</p>
+                <p className="mt-0.5 text-xs text-slate-400">{t.date}</p>
+              </div>
+              <span
+                className={`shrink-0 font-semibold tabular-nums ${
+                  t.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
+                }`}
+              >
+                {formatMoney(t.amount, currency)}
+              </span>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ background: categoryColor(t.category) }}
+              />
+              <select
+                className="input flex-1 !text-sm"
+                value={t.category}
+                onChange={(e) => setCategory(t.id, e.target.value, false)}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                onClick={() => removeTransaction(t.id)}
+                aria-label="Delete transaction"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </li>
+        ))}
+        {rows.length === 0 && (
+          <li className="py-10 text-center text-sm text-slate-400">No transactions match.</li>
+        )}
+      </ul>
+
+      {/* Desktop: full table. */}
+      <div className="hidden overflow-auto rounded-xl border border-slate-200 md:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>

@@ -32,9 +32,9 @@ export default function ImportModal({ open, onClose }: Props) {
   const reviewing = drafts !== null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-3 backdrop-blur-sm sm:p-8">
       <div className="my-auto w-full max-w-3xl animate-fade-in rounded-2xl bg-white shadow-card-lg">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-6">
           <div>
             <h2 className="text-base font-semibold text-slate-900">
               {reviewing ? 'Review transactions' : 'Import statements'}
@@ -50,7 +50,7 @@ export default function ImportModal({ open, onClose }: Props) {
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {reviewing ? (
             <ReviewTable
               drafts={drafts}

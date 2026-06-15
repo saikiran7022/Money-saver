@@ -79,3 +79,22 @@ body {
     @apply bg-white/10 text-white shadow-inner;
   }
 }
+
+/*
+ * Mobile ergonomics (unlayered so these win over the .input component layer).
+ * Keep form controls at 16px so iOS Safari doesn't auto-zoom the viewport on
+ * focus, and give interactive controls a comfortable ~44px tap target.
+ */
+@media (max-width: 640px) {
+  .input,
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  .input,
+  .btn,
+  select {
+    min-height: 2.75rem;
+  }
+}

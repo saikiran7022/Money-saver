@@ -64,7 +64,69 @@ export default function ReviewTable({ drafts, onCommit, onCancel }: Props) {
         </button>
       </div>
 
-      <div className="max-h-[22rem] overflow-auto rounded-xl border border-slate-200">
+      {/* Mobile: one editable card per row (no sideways scrolling). */}
+      <ul className="max-h-[60vh] space-y-3 overflow-auto md:hidden">
+        {rows.map((r) => (
+          <li key={r.id} className="rounded-xl border border-slate-200 p-3">
+            <div className="flex items-start gap-2">
+              <input
+                className="input flex-1"
+                placeholder="Description"
+                value={r.description}
+                onChange={(e) => update(r.id, { description: e.target.value })}
+              />
+              <button
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                onClick={() => remove(r.id)}
+                aria-label="Remove row"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <label className="text-xs text-slate-400">
+                Date
+                <input
+                  type="date"
+                  className="input mt-1 w-full"
+                  value={r.date}
+                  onChange={(e) => update(r.id, { date: e.target.value })}
+                />
+              </label>
+              <label className="text-xs text-slate-400">
+                Amount
+                <input
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  className={`input mt-1 w-full text-right font-medium ${
+                    r.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
+                  }`}
+                  value={r.amount}
+                  onChange={(e) => update(r.id, { amount: parseFloat(e.target.value) || 0 })}
+                />
+              </label>
+            </div>
+            <label className="mt-2 block text-xs text-slate-400">
+              Category
+              <select
+                className="input mt-1 w-full"
+                value={r.category}
+                onChange={(e) => update(r.id, { category: e.target.value })}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: editable table. */}
+      <div className="hidden max-h-[22rem] overflow-auto rounded-xl border border-slate-200 md:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
