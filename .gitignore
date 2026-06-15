@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+
+# Vite / TS build artifacts
+*.tsbuildinfo
+
+# Locally-fetched OCR assets (regenerate with `npm run setup:ocr`)
+public/vendor/tesseract

@@ -1,0 +1,41 @@
+{
+  "name": "money-saver",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Privacy-first money analysis app. Analyzes spending and earnings entirely in your browser — nothing is ever uploaded or stored on a server.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b --noEmit",
+    "setup:ocr": "node scripts/setup-ocr.mjs"
+  },
+  "dependencies": {
+    "idb": "^8.0.0",
+    "papaparse": "^5.4.1",
+    "pdfjs-dist": "^4.7.76",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.3",
+    "tesseract.js": "^5.1.1",
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/papaparse": "^5.3.15",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.5"
+  }
+}

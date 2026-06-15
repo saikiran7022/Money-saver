@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Privacy enforcement: this Content-Security-Policy forbids the app from
+      connecting to ANY external origin at runtime. Only same-origin assets,
+      plus in-memory blob:/data: resources (used by pdf.js / tesseract.js
+      workers and wasm), are permitted. The app literally cannot phone home.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' blob: data:; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <title>Money Saver — private spending & earnings analysis</title>
+    <meta
+      name="description"
+      content="Analyze your spending and earnings from your own bank statements, entirely in your browser. Nothing is ever uploaded or stored on a server."
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

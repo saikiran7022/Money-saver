@@ -1,0 +1,150 @@
+// Shared helpers for parsing dates/amounts out of messy statement text and
+// for formatting values in the UI. Kept dependency-free so it's trivially
+// unit-testable.
+
+const MONTHS: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12,
+};
+
+/** Zero-pad a number to 2 digits. */
+function pad(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+/**
+ * Try to parse a date token found in statement text into an ISO date
+ * (YYYY-MM-DD). Returns null if it doesn't look like a date.
+ *
+ * `dayFirst` disambiguates numeric formats like 03/04/2024 (true => DD/MM).
+ * Most non-US bank statements are day-first, so it defaults to true but the
+ * UI lets the user flip it per import.
+ */
+export function parseDate(raw: string, dayFirst = true): string | null {
+  const s = raw.trim();
+
+  // ISO: 2024-03-09 or 2024/03/09
+  let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (m) {
+    const [, y, mo, d] = m;
+    return iso(+y, +mo, +d);
+  }
+
+  // Numeric d/m/y or m/d/y with 2- or 4-digit year.
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+  if (m) {
+    let a = +m[1];
+    let b = +m[2];
+    const year = normalizeYear(+m[3]);
+    let day: number;
+    let month: number;
+    if (a > 12 && b <= 12) {
+      day = a;
+      month = b;
+    } else if (b > 12 && a <= 12) {
+      month = a;
+      day = b;
+    } else {
+      // Ambiguous — fall back to the user's preference.
+      day = dayFirst ? a : b;
+      month = dayFirst ? b : a;
+    }
+    return iso(year, month, day);
+  }
+
+  // "9 Mar 2024" / "9 March 2024" / "Mar 9, 2024" / "9-Mar-24"
+  m = s.match(/^(\d{1,2})[\s-]+([A-Za-z]{3,9})[\s-]+(\d{2,4})$/);
+  if (m) {
+    const month = MONTHS[m[2].slice(0, 3).toLowerCase()];
+    if (month) return iso(normalizeYear(+m[3]), month, +m[1]);
+  }
+  m = s.match(/^([A-Za-z]{3,9})[\s-]+(\d{1,2}),?[\s-]+(\d{2,4})$/);
+  if (m) {
+    const month = MONTHS[m[1].slice(0, 3).toLowerCase()];
+    if (month) return iso(normalizeYear(+m[3]), month, +m[2]);
+  }
+
+  return null;
+}
+
+function normalizeYear(y: number): number {
+  if (y >= 100) return y;
+  // 2-digit year: assume 2000s for 00-69, 1900s otherwise.
+  return y <= 69 ? 2000 + y : 1900 + y;
+}
+
+function iso(y: number, mo: number, d: number): string | null {
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  return `${y}-${pad(mo)}-${pad(d)}`;
+}
+
+/**
+ * Parse a monetary token into a number. Handles thousands separators,
+ * currency symbols, parentheses-as-negative, and trailing CR/DR markers.
+ * Returns null if there's no parseable number.
+ */
+export function parseAmount(raw: string): number | null {
+  let s = raw.trim();
+  if (!s) return null;
+
+  let sign = 1;
+  // Parentheses => negative, e.g. (1,234.56)
+  if (/^\(.*\)$/.test(s)) {
+    sign = -1;
+    s = s.slice(1, -1);
+  }
+  // Trailing/leading DR (debit => negative) or CR (credit => positive).
+  if (/\bdr\b/i.test(s)) sign = -1;
+  if (/\bcr\b/i.test(s)) sign = 1;
+
+  // Leading minus sign.
+  if (/^-/.test(s.replace(/[^\d.,-]/g, ''))) sign = -1;
+
+  // Strip everything except digits, separators and minus.
+  const cleaned = s.replace(/[^\d.,-]/g, '');
+  if (!/\d/.test(cleaned)) return null;
+
+  const num = normalizeNumber(cleaned);
+  if (num === null) return null;
+  return sign * Math.abs(num);
+}
+
+/**
+ * Normalize a number string that may use either "," or "." as the decimal
+ * separator (European vs US formatting) plus thousands separators.
+ */
+function normalizeNumber(cleaned: string): number | null {
+  let s = cleaned.replace(/-/g, '');
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+
+  if (hasComma && hasDot) {
+    // Whichever appears last is the decimal separator.
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (hasComma) {
+    // Treat comma as decimal only if it looks like one (1-2 trailing digits).
+    if (/,\d{1,2}$/.test(s)) s = s.replace(',', '.');
+    else s = s.replace(/,/g, '');
+  }
+
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Format a number as currency for display. */
+export function formatMoney(amount: number, currency = '$'): string {
+  const abs = Math.abs(amount).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${amount < 0 ? '-' : ''}${currency}${abs}`;
+}
+
+/** Collapse whitespace and trim — used to clean descriptions. */
+export function cleanText(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
+}
