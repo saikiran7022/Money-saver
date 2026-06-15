@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { AlertTriangle, FileUp, Loader2 } from 'lucide-react';
 import type { DraftTransaction, ParseResult } from '../types';
 
 interface Props {
@@ -62,29 +63,10 @@ export default function UploadZone({ onParsed }: Props) {
   }
 
   return (
-    <section className="card">
-      <div className="mb-3 flex flex-wrap items-center gap-4 text-sm">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={dayFirst} onChange={(e) => setDayFirst(e.target.checked)} />
-          Day-first dates (DD/MM)
-        </label>
-        <label className="flex items-center gap-2" title="If your PDF has a running balance in the last column, the amount is taken from the column before it.">
-          <input
-            type="checkbox"
-            checked={lastColumnIsBalance}
-            onChange={(e) => setLastColumnIsBalance(e.target.checked)}
-          />
-          Last column is a balance
-        </label>
-        <label className="flex items-center gap-2" title="Read scanned / image-only pages with in-browser OCR. Slower.">
-          <input type="checkbox" checked={useOcr} onChange={(e) => setUseOcr(e.target.checked)} />
-          OCR scanned pages
-        </label>
-      </div>
-
+    <section>
       <div
-        className={`grid place-items-center rounded-xl border-2 border-dashed p-8 text-center transition ${
-          dragging ? 'border-brand-500 bg-brand-50' : 'border-slate-300'
+        className={`grid place-items-center rounded-2xl border-2 border-dashed p-10 text-center transition ${
+          dragging ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50/50'
         }`}
         onDragOver={(e) => {
           e.preventDefault();
@@ -97,10 +79,13 @@ export default function UploadZone({ onParsed }: Props) {
           void handleFiles(e.dataTransfer.files);
         }}
       >
-        <p className="text-slate-600">Drag &amp; drop statements here</p>
+        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-brand-600 shadow-card">
+          {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <FileUp className="h-6 w-6" />}
+        </div>
+        <p className="mt-4 font-medium text-slate-700">Drag &amp; drop your statements here</p>
         <p className="mt-1 text-xs text-slate-400">PDF · CSV · Excel · image — add as many as you like</p>
         <button
-          className="btn-primary mt-3"
+          className="btn-primary mt-4"
           disabled={busy}
           onClick={() => inputRef.current?.click()}
         >
@@ -116,15 +101,71 @@ export default function UploadZone({ onParsed }: Props) {
         />
       </div>
 
-      {progress && <p className="mt-3 text-sm text-slate-500">{progress}</p>}
+      {/* Parsing options */}
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+        <Toggle checked={dayFirst} onChange={setDayFirst} label="Day-first dates (DD/MM)" />
+        <Toggle
+          checked={lastColumnIsBalance}
+          onChange={setLastColumnIsBalance}
+          label="Last column is a balance"
+          title="If your statement shows a running balance in the last column, the amount is taken from the column before it."
+        />
+        <Toggle
+          checked={useOcr}
+          onChange={setUseOcr}
+          label="OCR scanned pages"
+          title="Read scanned / image-only pages with on-device OCR. Slower."
+        />
+      </div>
+
+      {progress && (
+        <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {progress}
+        </p>
+      )}
 
       {warnings.length > 0 && (
-        <ul className="mt-3 space-y-1 text-xs text-amber-700">
+        <ul className="mt-3 space-y-1.5 rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
           {warnings.map((w, i) => (
-            <li key={i}>⚠️ {w}</li>
+            <li key={i} className="flex gap-2">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{w}</span>
+            </li>
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+  title,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  title?: string;
+}) {
+  return (
+    <label
+      title={title}
+      className={`chip cursor-pointer border transition ${
+        checked
+          ? 'border-brand-200 bg-brand-50 text-brand-700'
+          : 'border-slate-200 bg-white text-slate-500'
+      }`}
+    >
+      <input
+        type="checkbox"
+        className="h-3.5 w-3.5 accent-brand-600"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      {label}
+    </label>
   );
 }
