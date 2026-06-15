@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ChevronDown,
   PiggyBank,
   Repeat,
   Store,
@@ -51,9 +52,9 @@ export default function Overview({ filter }: { filter: PeriodFilter }) {
   const fmt = (n: number) => formatMoney(n, currency);
 
   return (
-    <div className="space-y-6">
-      {/* KPI cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-5 sm:space-y-6">
+      {/* KPI cards — 2×2 on phones so they don't stack into a tall column. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
           icon={TrendingUp}
           tone="emerald"
@@ -112,8 +113,7 @@ export default function Overview({ filter }: { filter: PeriodFilter }) {
 
       {/* Breakdowns */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="card">
-          <ListHeader icon={Store} title="Categories" />
+        <Panel icon={Store} title="Categories">
           <ul className="mt-3 space-y-2.5 text-sm">
             {byCategory.map((c) => (
               <li key={c.category}>
@@ -137,10 +137,9 @@ export default function Overview({ filter }: { filter: PeriodFilter }) {
             ))}
             {byCategory.length === 0 && <Empty>No spending.</Empty>}
           </ul>
-        </div>
+        </Panel>
 
-        <div className="card">
-          <ListHeader icon={Store} title="Top merchants" />
+        <Panel icon={Store} title="Top merchants">
           <ul className="mt-3 space-y-2 text-sm">
             {merchants.map((m) => (
               <li key={m.description} className="flex items-center justify-between gap-2">
@@ -153,10 +152,9 @@ export default function Overview({ filter }: { filter: PeriodFilter }) {
             ))}
             {merchants.length === 0 && <Empty>No spending.</Empty>}
           </ul>
-        </div>
+        </Panel>
 
-        <div className="card">
-          <ListHeader icon={Repeat} title="Recurring charges" />
+        <Panel icon={Repeat} title="Recurring charges">
           <ul className="mt-3 space-y-2 text-sm">
             {recurring.map((r) => (
               <li key={r.description} className="flex items-center justify-between gap-2">
@@ -168,8 +166,43 @@ export default function Overview({ filter }: { filter: PeriodFilter }) {
             ))}
             {recurring.length === 0 && <Empty>None detected (needs 3+ months).</Empty>}
           </ul>
-        </div>
+        </Panel>
       </div>
+    </div>
+  );
+}
+
+// Breakdown card that collapses on phones (where these lists add a lot of
+// scrolling) but is always expanded from `lg` up. The header is a toggle on
+// mobile; on desktop the chevron is hidden and the body is always shown.
+function Panel({
+  icon,
+  title,
+  children,
+}: {
+  icon: typeof Wallet;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(
+    () => typeof window === 'undefined' || window.matchMedia('(min-width: 1024px)').matches,
+  );
+  return (
+    <div className="card">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-2 lg:pointer-events-none"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <ListHeader icon={icon} title={title} />
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform lg:hidden ${
+            open ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+      <div className={`${open ? 'block' : 'hidden'} lg:block`}>{children}</div>
     </div>
   );
 }
@@ -215,7 +248,7 @@ function StatCard({
         )}
       </div>
       <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-0.5 text-2xl font-bold tabular-nums text-slate-900">{value}</p>
+      <p className="mt-0.5 text-xl font-bold tabular-nums text-slate-900 sm:text-2xl">{value}</p>
     </div>
   );
 }

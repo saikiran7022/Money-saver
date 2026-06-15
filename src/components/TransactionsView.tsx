@@ -41,18 +41,12 @@ export default function TransactionsView({ filter }: { filter: PeriodFilter }) {
         </div>
       </div>
 
-      {/* Mobile: stacked cards (no sideways scrolling). */}
-      <ul className="space-y-2.5 md:hidden">
+      {/* Mobile: compact stacked rows (no sideways scrolling). */}
+      <ul className="divide-y divide-slate-100 md:hidden">
         {rows.map((t) => (
-          <li
-            key={t.id}
-            className="rounded-xl border border-slate-200 p-3"
-          >
+          <li key={t.id} className="flex flex-col gap-1.5 py-2.5">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate font-medium text-slate-700">{t.description}</p>
-                <p className="mt-0.5 text-xs text-slate-400">{t.date}</p>
-              </div>
+              <p className="min-w-0 truncate font-medium text-slate-700">{t.description}</p>
               <span
                 className={`shrink-0 font-semibold tabular-nums ${
                   t.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
@@ -61,13 +55,14 @@ export default function TransactionsView({ filter }: { filter: PeriodFilter }) {
                 {formatMoney(t.amount, currency)}
               </span>
             </div>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 text-xs text-slate-400">{t.date}</span>
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ background: categoryColor(t.category) }}
               />
               <select
-                className="input flex-1 !text-sm"
+                className="input !min-h-0 flex-1 !py-1 !text-sm"
                 value={t.category}
                 onChange={(e) => setCategory(t.id, e.target.value, false)}
               >
@@ -78,7 +73,7 @@ export default function TransactionsView({ filter }: { filter: PeriodFilter }) {
                 ))}
               </select>
               <button
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                 onClick={() => removeTransaction(t.id)}
                 aria-label="Delete transaction"
               >
