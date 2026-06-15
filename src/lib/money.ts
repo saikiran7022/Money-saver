@@ -127,27 +127,27 @@ function iso(y: number, mo: number, d: number): string | null {
  * Returns null if there's no parseable number.
  */
 export function parseAmount(raw: string): number | null {
-  let s = raw.trim();
+  const s = raw.trim();
   if (!s) return null;
 
   let sign = 1;
-  // Parentheses => negative, e.g. (1,234.56)
-  if (/^\(.*\)$/.test(s)) {
-    sign = -1;
-    s = s.slice(1, -1);
-  }
-  // Trailing/leading DR (debit => negative) or CR (credit => positive).
-  if (/\bdr\b/i.test(s)) sign = -1;
-  if (/\bcr\b/i.test(s)) sign = 1;
+  if (/^\(.*\)$/.test(s)) sign = -1; // (1,234.56) => negative
+  if (/\bdr\b/i.test(s)) sign = -1; // debit marker
+  if (/\bcr\b/i.test(s)) sign = 1; // credit marker
+  if (/(^|[^\d])-\s*\d/.test(s)) sign = -1; // a minus sign just before a number
 
-  // Leading minus sign.
-  if (/^-/.test(s.replace(/[^\d.,-]/g, ''))) sign = -1;
+  // Pull out every number-like token. Crucially we never concatenate across
+  // tokens — a cell that accidentally contains both the amount and the running
+  // balance (e.g. "8,305.72 1,000.00") must not become one giant number.
+  const tokens = s.match(/\d[\d.,]*\d|\d/g);
+  if (!tokens) return null;
 
-  // Strip everything except digits, separators and minus.
-  const cleaned = s.replace(/[^\d.,-]/g, '');
-  if (!/\d/.test(cleaned)) return null;
+  // Prefer a token that looks like money (2-decimal), else the first token —
+  // which, when amount+balance share a cell, is the amount (balance is last).
+  const moneyToken = tokens.find((t) => /[.,]\d{2}$/.test(t));
+  const chosen = moneyToken ?? tokens[0];
 
-  const num = normalizeNumber(cleaned);
+  const num = normalizeNumber(chosen);
   if (num === null) return null;
   return sign * Math.abs(num);
 }

@@ -70,6 +70,13 @@ describe('parseAmount', () => {
   it('returns null when there is no number', () => {
     expect(parseAmount('balance')).toBeNull();
   });
+
+  it('never concatenates two numbers that share a cell (amount + balance)', () => {
+    // The amount is the left/first money token; the balance must not be merged.
+    expect(parseAmount('8,305.72 1,000.00')).toBe(8305.72);
+    expect(parseAmount('-2,710.00 5,000.00')).toBe(-2710);
+    expect(parseAmount('1,450.00 3,550.00')).toBe(1450);
+  });
 });
 
 describe('formatMoney', () => {
