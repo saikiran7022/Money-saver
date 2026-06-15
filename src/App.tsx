@@ -17,6 +17,7 @@ export default function App() {
   const [section, setSection] = useState<Section>('overview');
   const [filter, setFilter] = useState<PeriodFilter>({ kind: 'all' });
   const [importing, setImporting] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     void hydrate();
@@ -28,7 +29,12 @@ export default function App() {
 
   return (
     <div className="flex h-full">
-      <Sidebar section={section} onSection={setSection} />
+      <Sidebar
+        section={section}
+        onSection={setSection}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
+      />
 
       <div className="app-canvas flex min-w-0 flex-1 flex-col">
         <Topbar
@@ -36,9 +42,10 @@ export default function App() {
           filter={filter}
           onFilter={setFilter}
           onImport={() => setImporting(true)}
+          onMenu={() => setNavOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto px-6 py-6">
+        <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
           <div className="mx-auto max-w-6xl">
             {!hasData ? (
               <Landing onImport={() => setImporting(true)} />

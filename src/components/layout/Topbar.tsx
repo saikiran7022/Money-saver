@@ -1,4 +1,4 @@
-import { Upload } from 'lucide-react';
+import { Menu, Upload } from 'lucide-react';
 import type { PeriodFilter } from '../../types';
 import type { Section } from './Sidebar';
 import { availableMonths, availableYears } from '../../lib/analytics';
@@ -15,9 +15,10 @@ interface Props {
   filter: PeriodFilter;
   onFilter: (f: PeriodFilter) => void;
   onImport: () => void;
+  onMenu: () => void;
 }
 
-export default function Topbar({ section, filter, onFilter, onImport }: Props) {
+export default function Topbar({ section, filter, onFilter, onImport, onMenu }: Props) {
   const transactions = useStore((s) => s.transactions);
   const years = availableYears(transactions);
   const months = availableMonths(transactions);
@@ -25,13 +26,22 @@ export default function Topbar({ section, filter, onFilter, onImport }: Props) {
   const showFilter = section !== 'rules' && transactions.length > 0;
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-white/80 px-6 py-4 backdrop-blur">
-      <div>
-        <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
-        <p className="text-sm text-slate-500">{subtitle}</p>
+    <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+      <div className="flex items-center gap-2">
+        <button
+          className="btn-subtle h-9 w-9 !px-0 md:hidden"
+          onClick={onMenu}
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-base font-semibold text-slate-900 sm:text-lg">{title}</h1>
+          <p className="hidden text-sm text-slate-500 sm:block">{subtitle}</p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {showFilter && (
           <select
             className="input"
@@ -66,7 +76,8 @@ export default function Topbar({ section, filter, onFilter, onImport }: Props) {
 
         <button className="btn-primary" onClick={onImport}>
           <Upload className="h-4 w-4" />
-          Import statements
+          <span className="hidden sm:inline">Import statements</span>
+          <span className="sm:hidden">Import</span>
         </button>
       </div>
     </div>
