@@ -20,8 +20,11 @@ function pad(n: number): string {
  * Most non-US bank statements are day-first, so it defaults to true but the
  * UI lets the user flip it per import.
  */
-export function parseDate(raw: string, dayFirst = true): string | null {
+export function parseDate(raw: string, dayFirst = true, assumeYear?: number): string | null {
   const s = raw.trim();
+  // Many US statements (Chase, Capital One, …) omit the year on each row; fall
+  // back to the statement year when known, otherwise the current year.
+  const fallbackYear = assumeYear ?? new Date().getFullYear();
 
   // ISO: 2024-03-09 or 2024/03/09
   let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
@@ -33,23 +36,13 @@ export function parseDate(raw: string, dayFirst = true): string | null {
   // Numeric d/m/y or m/d/y with 2- or 4-digit year.
   m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
   if (m) {
-    let a = +m[1];
-    let b = +m[2];
-    const year = normalizeYear(+m[3]);
-    let day: number;
-    let month: number;
-    if (a > 12 && b <= 12) {
-      day = a;
-      month = b;
-    } else if (b > 12 && a <= 12) {
-      month = a;
-      day = b;
-    } else {
-      // Ambiguous — fall back to the user's preference.
-      day = dayFirst ? a : b;
-      month = dayFirst ? b : a;
-    }
-    return iso(year, month, day);
+    return numericDate(+m[1], +m[2], normalizeYear(+m[3]), dayFirst);
+  }
+
+  // Numeric with no year: 03/15 or 15/03 — use the fallback year.
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})$/);
+  if (m) {
+    return numericDate(+m[1], +m[2], fallbackYear, dayFirst);
   }
 
   // "9 Mar 2024" / "9 March 2024" / "Mar 9, 2024" / "9-Mar-24"
@@ -58,13 +51,63 @@ export function parseDate(raw: string, dayFirst = true): string | null {
     const month = MONTHS[m[2].slice(0, 3).toLowerCase()];
     if (month) return iso(normalizeYear(+m[3]), month, +m[1]);
   }
-  m = s.match(/^([A-Za-z]{3,9})[\s-]+(\d{1,2}),?[\s-]+(\d{2,4})$/);
+  m = s.match(/^([A-Za-z]{3,9})\.?[\s-]+(\d{1,2}),?[\s-]+(\d{2,4})$/);
   if (m) {
     const month = MONTHS[m[1].slice(0, 3).toLowerCase()];
     if (month) return iso(normalizeYear(+m[3]), month, +m[2]);
   }
 
+  // Month-name with no year: "Mar 9" / "9 Mar".
+  m = s.match(/^([A-Za-z]{3,9})\.?[\s-]+(\d{1,2})$/);
+  if (m) {
+    const month = MONTHS[m[1].slice(0, 3).toLowerCase()];
+    if (month) return iso(fallbackYear, month, +m[2]);
+  }
+  m = s.match(/^(\d{1,2})[\s-]+([A-Za-z]{3,9})$/);
+  if (m) {
+    const month = MONTHS[m[2].slice(0, 3).toLowerCase()];
+    if (month) return iso(fallbackYear, month, +m[1]);
+  }
+
   return null;
+}
+
+/** Resolve a numeric date's day/month order, disambiguating when possible. */
+function numericDate(a: number, b: number, year: number, dayFirst: boolean): string | null {
+  let day: number;
+  let month: number;
+  if (a > 12 && b <= 12) {
+    day = a;
+    month = b;
+  } else if (b > 12 && a <= 12) {
+    month = a;
+    day = b;
+  } else {
+    day = dayFirst ? a : b;
+    month = dayFirst ? b : a;
+  }
+  return iso(year, month, day);
+}
+
+// Finds a date-like token anywhere in a string (handles cells that contain a
+// trailing description or a second "posting date" column). The alphabetic
+// forms only match real month names so words like "Posted" aren't mistaken.
+const MONTH_NAME = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?';
+const DATE_TOKEN_RE = new RegExp(
+  '(' +
+    '\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}' +
+    '|\\d{1,2}[-/.]\\d{1,2}(?:[-/.]\\d{2,4})?' +
+    `|\\d{1,2}[\\s-]${MONTH_NAME}(?:[\\s-]\\d{2,4})?` +
+    `|${MONTH_NAME}\\s+\\d{1,2}(?:,?\\s+\\d{2,4})?` +
+    ')',
+  'i',
+);
+
+/** Extract and parse the first date found in arbitrary text. */
+export function extractDate(text: string, dayFirst = true, assumeYear?: number): string | null {
+  const m = text.match(DATE_TOKEN_RE);
+  if (!m) return null;
+  return parseDate(m[1], dayFirst, assumeYear);
 }
 
 function normalizeYear(y: number): number {

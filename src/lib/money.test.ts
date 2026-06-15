@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseAmount, parseDate, formatMoney, cleanText } from './money';
+import { parseAmount, parseDate, extractDate, formatMoney, cleanText } from './money';
 
 describe('parseDate', () => {
   it('parses ISO dates', () => {
@@ -26,6 +26,23 @@ describe('parseDate', () => {
   it('returns null for non-dates', () => {
     expect(parseDate('hello')).toBeNull();
     expect(parseDate('1234.56')).toBeNull();
+  });
+
+  it('handles year-less dates using the assumed statement year', () => {
+    expect(parseDate('01/05', false, 2024)).toBe('2024-01-05'); // MM/DD
+    expect(parseDate('Mar 9', true, 2023)).toBe('2023-03-09');
+    expect(parseDate('9 Mar', true, 2023)).toBe('2023-03-09');
+  });
+});
+
+describe('extractDate', () => {
+  it('finds the first date inside a noisy cell (e.g. two date columns)', () => {
+    expect(extractDate('03/15 03/16', false, 2024)).toBe('2024-03-15');
+    expect(extractDate('Posted 01/20/2024 ref 99', false)).toBe('2024-01-20');
+  });
+
+  it('returns null when no date is present', () => {
+    expect(extractDate('no date here')).toBeNull();
   });
 });
 

@@ -22,6 +22,8 @@ export interface HeuristicOptions {
   source: string;
   /** If a line has two trailing amounts, treat the last as a running balance. */
   lastColumnIsBalance: boolean;
+  /** Statement year, used for rows whose date omits the year (e.g. 03/15). */
+  assumeYear?: number;
 }
 
 // A money token: optional currency symbol, digits with separators, optional
@@ -29,9 +31,19 @@ export interface HeuristicOptions {
 const MONEY_RE =
   /[-(]?\s*[$£€₹]?\s*\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?\s*\)?(?:\s*(?:cr|dr))?/gi;
 
-// A leading date token in common formats.
-const DATE_RE =
-  /^\s*(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{1,2}[\s-][A-Za-z]{3,9}[\s-]\d{2,4}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{2,4})/;
+// A leading date token in common formats (including year-less MM/DD and "Mon DD").
+// Alphabetic months are restricted to real month names.
+const MONTH_NAME = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?';
+const DATE_RE = new RegExp(
+  '^\\s*(' +
+    '\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}' +
+    '|\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{2,4}' +
+    '|\\d{1,2}[-/.]\\d{1,2}' +
+    `|\\d{1,2}[\\s-]${MONTH_NAME}(?:[\\s-]\\d{2,4})?` +
+    `|${MONTH_NAME}\\s+\\d{1,2}(?:,?\\s+\\d{2,4})?` +
+    ')',
+  'i',
+);
 
 // Descriptions that strongly imply money coming IN, used to guess the sign of
 // an unsigned amount when no running balance is available to infer direction.
@@ -82,7 +94,7 @@ export function linesToTransactions(
 
     const dateMatch = line.match(DATE_RE);
     if (!dateMatch) continue;
-    const date = parseDate(dateMatch[1], opts.dayFirst);
+    const date = parseDate(dateMatch[1], opts.dayFirst, opts.assumeYear);
     if (!date) continue;
 
     // Find every money-like token and keep those that actually parse.
