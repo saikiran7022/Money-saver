@@ -12,16 +12,33 @@ const NAV: { id: Section; label: string; icon: typeof LayoutDashboard }[] = [
 interface Props {
   section: Section;
   onSection: (s: Section) => void;
+  /** Mobile drawer open state. */
+  open: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar({ section, onSection }: Props) {
+export default function Sidebar({ section, onSection, open, onClose }: Props) {
   const settings = useStore((s) => s.settings);
   const setSettings = useStore((s) => s.setSettings);
   const clearAll = useStore((s) => s.clearAll);
   const count = useStore((s) => s.transactions.length);
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col bg-gradient-to-b from-ink-900 to-ink-800 text-white">
+    <>
+      {/* Dimmed backdrop on mobile when the drawer is open. */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 transform flex-col bg-gradient-to-b from-ink-900 to-ink-800 text-white transition-transform duration-200 md:static md:z-auto md:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-glow">
@@ -38,7 +55,10 @@ export default function Sidebar({ section, onSection }: Props) {
         {NAV.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => onSection(id)}
+            onClick={() => {
+              onSection(id);
+              onClose();
+            }}
             className={`nav-item w-full ${section === id ? 'nav-item-active' : ''}`}
           >
             <Icon className="h-4 w-4" />
@@ -100,6 +120,7 @@ export default function Sidebar({ section, onSection }: Props) {
           <span>100% local. No server, no tracking, no bank connection.</span>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
