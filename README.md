@@ -1,5 +1,9 @@
 # 💰 Money Saver
 
+[![Deploy to GitHub Pages](https://github.com/saikiran7022/Money-saver/actions/workflows/deploy.yml/badge.svg)](https://github.com/saikiran7022/Money-saver/actions/workflows/deploy.yml)
+
+> Live site: **https://saikiran7022.github.io/Money-saver/** (after the first deploy)
+
 A **privacy-first** money analysis app. Drop in your own bank statements and get a clear
 picture of your spending and earnings — **entirely in your browser**. There is no server,
 no account, no tracking, and no bank connection. Your financial data never leaves your
