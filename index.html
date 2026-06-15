@@ -18,6 +18,17 @@
       name="description"
       content="Analyze your spending and earnings from your own bank statements, entirely in your browser. Nothing is ever uploaded or stored on a server."
     />
+
+    <!-- PWA: installable, offline-capable. All assets are same-origin. -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#4f46e5" />
+
+    <!-- iOS / Safari "Add to Home Screen" support -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Money Saver" />
   </head>
   <body>
     <div id="root"></div>
