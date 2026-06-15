@@ -88,6 +88,23 @@ one-time **build** step — the app itself never connects to the internet. After
 tick **“OCR scanned pages”** in the upload panel. Text-based PDFs and CSV/Excel imports
 work without this step.
 
+## Install as an app (PWA)
+
+Money Saver is a **Progressive Web App**, so you can install it to your phone or
+desktop and launch it like a native app — no App Store, no account, no cost.
+
+- **iOS / iPadOS:** open the live site in **Safari** → Share → **Add to Home
+  Screen**.
+- **Android (Chrome):** open the site → menu → **Install app** / **Add to Home
+  Screen**.
+- **Desktop (Chrome/Edge):** click the **install** icon in the address bar.
+
+Once installed it runs full-screen and works **offline** — a same-origin service
+worker caches the app shell. In keeping with the project's privacy guarantee, the
+service worker only ever caches the app's own assets; it never makes or proxies a
+cross-origin request. App icons are generated locally (`npm run generate:icons`)
+and bundled in, so nothing is fetched from an external CDN.
+
 ## How parsing works
 
 Bank statement layouts vary wildly, so the PDF/image path is heuristic + human-in-the-loop:
