@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import type { DraftTransaction } from '../types';
 import { CATEGORIES } from '../lib/categorize';
 import { transactionId } from '../lib/dedupe';
@@ -34,7 +35,14 @@ export default function ReviewTable({ drafts, onCommit, onCancel }: Props) {
   function addBlank() {
     const today = new Date().toISOString().slice(0, 10);
     setRows((rs) => [
-      { id: transactionId(today, 0, `manual-${rs.length}`), date: today, description: '', amount: 0, category: 'Other', source: 'manual' },
+      {
+        id: transactionId(today, 0, `manual-${rs.length}`),
+        date: today,
+        description: '',
+        amount: 0,
+        category: 'Other',
+        source: 'manual',
+      },
       ...rs,
     ]);
   }
@@ -42,60 +50,52 @@ export default function ReviewTable({ drafts, onCommit, onCancel }: Props) {
   const total = rows.reduce((s, r) => s + r.amount, 0);
 
   return (
-    <section className="card">
+    <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold">Review {rows.length} transactions</h2>
-          <p className="text-xs text-slate-500">
-            Fix anything the parser got wrong before adding it. Net of these rows:{' '}
+        <p className="text-sm text-slate-500">
+          <span className="font-semibold text-slate-700">{rows.length}</span> transactions · net{' '}
+          <span className={total < 0 ? 'text-rose-600' : 'text-emerald-600'}>
             {formatMoney(total, currency)}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button className="btn-ghost" onClick={addBlank}>
-            + Add row
-          </button>
-          <button className="btn-ghost" onClick={onCancel}>
-            Cancel
-          </button>
-          <button className="btn-primary" disabled={rows.length === 0} onClick={() => onCommit(rows)}>
-            Add to analysis
-          </button>
-        </div>
+          </span>
+        </p>
+        <button className="btn-ghost" onClick={addBlank}>
+          <Plus className="h-4 w-4" />
+          Add row
+        </button>
       </div>
 
-      <div className="max-h-96 overflow-auto rounded-lg border border-slate-200">
+      <div className="max-h-[22rem] overflow-auto rounded-xl border border-slate-200">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="p-2">Date</th>
-              <th className="p-2">Description</th>
-              <th className="p-2">Category</th>
-              <th className="p-2 text-right">Amount</th>
-              <th className="p-2"></th>
+              <th className="p-2.5">Date</th>
+              <th className="p-2.5">Description</th>
+              <th className="p-2.5">Category</th>
+              <th className="p-2.5 text-right">Amount</th>
+              <th className="p-2.5"></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t border-slate-100">
-                <td className="p-1">
+              <tr key={r.id} className="border-t border-slate-100 hover:bg-slate-50/60">
+                <td className="p-1.5">
                   <input
                     type="date"
-                    className="w-36 rounded border border-slate-200 px-1 py-1"
+                    className="input w-36"
                     value={r.date}
                     onChange={(e) => update(r.id, { date: e.target.value })}
                   />
                 </td>
-                <td className="p-1">
+                <td className="p-1.5">
                   <input
-                    className="w-full rounded border border-slate-200 px-1 py-1"
+                    className="input w-full"
                     value={r.description}
                     onChange={(e) => update(r.id, { description: e.target.value })}
                   />
                 </td>
-                <td className="p-1">
+                <td className="p-1.5">
                   <select
-                    className="rounded border border-slate-200 px-1 py-1"
+                    className="input"
                     value={r.category}
                     onChange={(e) => update(r.id, { category: e.target.value })}
                   >
@@ -106,24 +106,24 @@ export default function ReviewTable({ drafts, onCommit, onCancel }: Props) {
                     ))}
                   </select>
                 </td>
-                <td className="p-1 text-right">
+                <td className="p-1.5 text-right">
                   <input
                     type="number"
                     step="0.01"
-                    className={`w-28 rounded border border-slate-200 px-1 py-1 text-right ${
+                    className={`input w-28 text-right font-medium ${
                       r.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
                     }`}
                     value={r.amount}
                     onChange={(e) => update(r.id, { amount: parseFloat(e.target.value) || 0 })}
                   />
                 </td>
-                <td className="p-1 text-center">
+                <td className="p-1.5 text-center">
                   <button
-                    className="text-slate-400 hover:text-rose-600"
+                    className="text-slate-300 transition hover:text-rose-600"
                     onClick={() => remove(r.id)}
                     aria-label="Remove row"
                   >
-                    ✕
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </td>
               </tr>
@@ -131,6 +131,15 @@ export default function ReviewTable({ drafts, onCommit, onCancel }: Props) {
           </tbody>
         </table>
       </div>
-    </section>
+
+      <div className="mt-4 flex justify-end gap-2">
+        <button className="btn-ghost" onClick={onCancel}>
+          Back
+        </button>
+        <button className="btn-primary" disabled={rows.length === 0} onClick={() => onCommit(rows)}>
+          Add {rows.length} to analysis
+        </button>
+      </div>
+    </div>
   );
 }

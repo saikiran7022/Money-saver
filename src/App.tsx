@@ -1,65 +1,59 @@
 import { useEffect, useState } from 'react';
-import type { DraftTransaction } from './types';
+import type { PeriodFilter } from './types';
 import { useStore } from './state/store';
-import Header from './components/Header';
-import PrivacyBanner from './components/PrivacyBanner';
-import UploadZone from './components/UploadZone';
-import ReviewTable from './components/ReviewTable';
-import Dashboard from './components/Dashboard';
+import Sidebar, { type Section } from './components/layout/Sidebar';
+import Topbar from './components/layout/Topbar';
+import Landing from './components/Landing';
+import Overview from './components/Overview';
+import TransactionsView from './components/TransactionsView';
+import RulesManager from './components/RulesManager';
+import ImportModal from './components/ImportModal';
 
 export default function App() {
   const hydrate = useStore((s) => s.hydrate);
   const hydrated = useStore((s) => s.hydrated);
-  const transactions = useStore((s) => s.transactions);
-  const commitDrafts = useStore((s) => s.commitDrafts);
+  const hasData = useStore((s) => s.transactions.length > 0);
 
-  // Drafts awaiting review before they're committed to the dataset.
-  const [drafts, setDrafts] = useState<DraftTransaction[] | null>(null);
+  const [section, setSection] = useState<Section>('overview');
+  const [filter, setFilter] = useState<PeriodFilter>({ kind: 'all' });
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
 
-  function handleParsed(parsed: DraftTransaction[]) {
-    setDrafts((prev) => [...(prev ?? []), ...parsed]);
-  }
-
-  function handleCommit(reviewed: DraftTransaction[]) {
-    commitDrafts(reviewed);
-    setDrafts(null);
-  }
-
   if (!hydrated) {
-    return (
-      <div className="grid min-h-screen place-items-center text-slate-500">Loading…</div>
-    );
+    return <div className="app-canvas grid h-full place-items-center text-slate-400">Loading…</div>;
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-        <PrivacyBanner />
-        <UploadZone onParsed={handleParsed} />
+    <div className="flex h-full">
+      <Sidebar section={section} onSection={setSection} />
 
-        {drafts && (
-          <ReviewTable
-            drafts={drafts}
-            onCommit={handleCommit}
-            onCancel={() => setDrafts(null)}
-          />
-        )}
+      <div className="app-canvas flex min-w-0 flex-1 flex-col">
+        <Topbar
+          section={section}
+          filter={filter}
+          onFilter={setFilter}
+          onImport={() => setImporting(true)}
+        />
 
-        {transactions.length > 0 ? (
-          <Dashboard />
-        ) : (
-          !drafts && (
-            <div className="card text-center text-slate-500">
-              No transactions yet. Upload a bank statement above to get started.
-            </div>
-          )
-        )}
-      </main>
+        <main className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="mx-auto max-w-6xl">
+            {!hasData ? (
+              <Landing onImport={() => setImporting(true)} />
+            ) : section === 'overview' ? (
+              <Overview filter={filter} />
+            ) : section === 'transactions' ? (
+              <TransactionsView filter={filter} />
+            ) : (
+              <RulesManager />
+            )}
+          </div>
+        </main>
+      </div>
+
+      <ImportModal open={importing} onClose={() => setImporting(false)} />
     </div>
   );
 }

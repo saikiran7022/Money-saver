@@ -9,6 +9,19 @@ picture of your spending and earnings — **entirely in your browser**. There is
 no account, no tracking, and no bank connection. Your financial data never leaves your
 device.
 
+![Overview dashboard](docs/02-overview.png)
+
+<details>
+<summary>More screenshots</summary>
+
+**Landing**
+![Landing](docs/01-landing.png)
+
+**Transactions**
+![Transactions](docs/03-transactions.png)
+
+</details>
+
 ## Why it's private
 
 - **Nothing is uploaded.** Every statement is parsed and analyzed locally in your browser.
